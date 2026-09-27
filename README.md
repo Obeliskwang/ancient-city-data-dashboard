@@ -1,6 +1,6 @@
 # Ancient City Data Dashboard · 古城大数据分析中控平台（前端数据大屏）
 
-> 山西古城大数据分析中控平台 · 数据大屏前端（Vue3 + ECharts）
+> 古城大数据分析中控平台 · 数据大屏前端（Vue3 + ECharts）
 
 面向景区管理方的**数据可视化大屏（中控台）**，实时展示客流与消费多维指标，数据来自 FastAPI 后端（`ancient-city-backend`）的统计接口。
 
