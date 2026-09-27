@@ -1,0 +1,42 @@
+# ================= 依赖目录（一定不上传） =================
+node_modules/
+node_modules
+
+# ================= 构建产物 =================
+dist/
+dist-ssr/
+coverage/
+*.local
+
+# ================= 日志 =================
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# ================= 环境变量与密钥（不要提交） =================
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# ================= 编辑器 / 系统文件 =================
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.DS_Store
+Thumbs.db
+
+# ================= 前端缓存 / 测试 =================
+.vite/
+*.tsbuildinfo
+/cypress/videos/
+/cypress/screenshots/

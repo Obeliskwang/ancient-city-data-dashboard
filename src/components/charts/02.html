@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文字螺旋诗境</title>
+    <style>
+        body {
+            min-height: 100vh;
+            margin: 1rem;
+            display: flex;
+            justify-content: center;
+            background: #1a1a1a;
+            color: #e0e0e0;
+            font-family: "宋体", SimSun, serif;
+            line-height: 1.8;
+            overflow-x: hidden;
+            cursor: default;
+        }
+
+        .text-container {
+            max-width: 800px;
+            padding: 2rem;
+            position: relative;
+            font-size: 1.1rem;
+            text-align: justify;
+            z-index: 1;
+        }
+
+        .text-span {
+            position: relative;
+            display: inline-block;
+            transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            white-space: pre-wrap;
+            opacity: 0.9;
+            will-change: transform, opacity;
+            transform: translateZ(0);
+            backface-visibility: hidden;
+            perspective: 1000px;
+        }
+
+        .paragraph {
+            margin-bottom: 2rem;
+        }
+
+        .pointer-text {
+            position: fixed;
+            pointer-events: none;
+            font-size: 1.2em;
+            color: rgba(255, 215, 0, 0.8);
+            transform: translate3d(-50%, -50%, 0);
+            z-index: 2;
+            left: 0;
+            top: 0;
+        }
+    </style>
+</head>
+<body>
+<div class="text-container" id="textContainer"></div>
+
+<script>
+    const content = [
+        "倘若出城，走三四十里路(我们那里的里程是很短，一里才及英里三分之一)，来回总要预备一天。你坐在船上，应该是游山的态度，看看四周物色，随处可见的山，岸旁的乌柏，河边的红寥和白殇，渔舍，各式各样的桥，困倦的时候睡在舱中拿出随笔来看，或者冲一碗清茶喝喝。偏门外的鉴湖一带，贺家池，壶筋左近，我都是喜欢的，或者往娄公埠骑驴去游兰亭(但我劝你还是步行，骑驴或者于你不很相宜)，到得暮色苍然的时候进城上都挂着薛荔的东门来，倒是颇有趣味的事。倘若路上不平静，你往杭州去时可于下午开船，黄昏时候的景色正最好看，只可惜这一带地方的名字我都忘记了。夜间睡在舱中，听水声橹声，来往船只的招呼声，以及乡间的犬吠鸡鸣，也都很有意思。雇一只船到乡下去看庙戏，可以了解中国旧戏的真趣味，而且在船上行动自如，要看就看，要睡就睡，要喝酒就喝酒，我觉得也可以算是理想的行乐法。只可惜讲维新以来这些演剧与迎会都已禁止，中产阶级的低能人别在“布业会馆”等处建起“海式”的戏场来，请大家买票看上海的猫儿戏。这些地方你千万不要去。--你到我那故乡，恐怕没有一个人认得，我又因为在教书不能陪你去玩，坐夜船，谈闲天，实在抱歉而且惆怅。川岛君夫妇现在偁山下，本来可以给你绍介，但是你到那里的时候他们恐怕已经离开故乡了。初寒，善自珍重，不尽。",
+        "《假如今天是我生命中的最后一天……》",
+        "假如今天是我生命中的最后一天。",
+        "我要如何利用这最后、最宝贵的一天呢?首先，我要把一天的时间珍藏好，不让一分一秒的时间滴漏。我不为昨日的不幸叹息，过去的已够不幸，不要再陪上今日的运道。",
+        "时光会倒流吗?太阳会西升东落吗?我可以纠正昨天的错误吗?我能抚平昨日的创伤吗?我能比昨天年轻吗?一句出口的恶言，一记挥出的拳头，一切造成的痛，能收回吗?",
+        "不能!过去的永远过去了，我不再去想它。",
+        "假如今天是我生命中的最后一天。",
+        "我该怎么办?忘记昨天，也不要痴想明天。明天是一个未知数，为什么要把今天的精力浪费在未知的事上?想着明天的种种，今天的时光也白白流失了。祈盼今早的太阳再次升起，太阳已经落山。走在今天的路上，能做明天的事吗?我能把明天的金币放进今天的钱袋吗?明日瓜熟，今日能蒂落吗?明天的死亡能将今天的欢乐蒙上阴影吗?我能杞人忧天吗?明天和明天一样被我埋葬。我不再想它。",
+        "今天是我生命中的最后一天。",
+        "这是我仅有的一天，是现实的永恒。我像被赦免死刑的囚犯，用喜悦的泪水拥抱新生的太阳。我举起双手，感谢这无与伦比的一天。当我想到昨天和我一起迎接日出的朋友，今天已不复存在时，我为自己的幸存，感激上苍。我是无比幸运的人，今天的时光是额外的奖赏。许多强者都先我而去，为什么我得到这额外的一天?是不是因为他们已大功告成，而我尚在旅途跋涉?如果这样，这是不是成就我的一次机会，让我功德圆满?造物主的安排是否别具匠心?",
+        "今天是不是我超越他人的机会?今天是我生命中的最后一天。",
+        "生命只有一次，而人生也不过是时间的累积。我若让今天的时光白白流失，就等于毁掉人生最后一页。因此，我珍惜今天的一分一秒，因为他们将一去不复返。我无法把今天存入银行，明天再来取用。时间像风一样不可捕捉。每一分一秒，我要用双手捧住，用爱心抚摸，因为他们如此宝贵。垂死的人用毕生的钱财都无法换得一口生气。我无法计算时间的价值，它们是无价之宝!",
+        "今天是我生命中的最后一天。",
+        "我憎恨那些浪费时间的行为。我要摧毁拖延的习性。我要以真诚埋葬怀疑，用信心驱赶恐惧。我不听闲话，不游手好闲，不与不务正业的人来往。我终于醒悟到，若是懒惰，无异于从我所爱之人手中窃取食物和衣裳。我不是贼，我有爱心，今天是我最后的机会，我要证明我的爱心和伟大。",
+        "今天是我生命中的最后一天。",
+        "今日事今日毕。今天我要趁孩子还小的时侯，多加爱护，明天他们将离我而去，我也会离开。今天我要深情地拥抱我的妻子，给她甜蜜的热吻，明天她会离去，我也是。今天我要帮助落难的朋友，明天他不再求援，我也听不到他的哀求。我要乐于奉献，因为明天我无法给予，也没有人来领受了。",
+        "今天是我生命中的最后一天。",
+        "如果这是我的末日，那么它就是不朽的纪念日。我把它当成最美好的日子。我要把每分每秒化为甘露，一口一口，细细品尝，满怀感激。我要每一分钟都有价值。我要加倍努力，直到精疲力竭。即使这样，我还要继续努力。今天的每一分钟都胜过昨天的每一小时，最后的也是最好的。",
+        "假如今天是我生命中的最后一天??",
+        "如果不是的话，我要跪倒在上苍面前，深深致谢。"
+    ];
+
+    // 初始化文本容器
+    const textContainer = document.getElementById('textContainer');
+    content.forEach(paragraph => {
+        const p = document.createElement('div');
+        p.className = 'paragraph';
+        p.innerHTML = paragraph.split('').map(char =>
+            `<span class="text-span">${char}</span>`
+        ).join('');
+        textContainer.appendChild(p);
+    });
+
+    const textSpans = document.querySelectorAll('.text-span');
+    let mouseX = window.innerWidth/2;
+    let mouseY = window.innerHeight/2;
+    let animationFrameId;
+    let spanPositions = [];
+
+    // 缓存元素位置
+    function updateSpanPositions() {
+        const scrollX = window.scrollX;
+        const scrollY = window.scrollY;
+        textSpans.forEach((span, index) => {
+            const rect = span.getBoundingClientRect();
+            spanPositions[index] = {
+                x: rect.left + rect.width/2 + scrollX,
+                y: rect.top + rect.height/2 + scrollY
+            };
+        });
+    }
+
+    // 初始化鼠标周围文字
+    const pointerTexts = [];
+    const createPointerText = () => {
+        const symbols = ['※', '✧', '❉', '◎', '✦', '❀', '✿'];
+        const text = document.createElement('div');
+        text.className = 'pointer-text';
+        text.textContent = symbols[Math.floor(Math.random()*symbols.length)];
+        document.body.appendChild(text);
+        pointerTexts.push({
+            element: text,
+            angle: Math.random() * Math.PI * 2,
+            distance: 0,
+            speed: 0.05 + Math.random() * 0.05
+        });
+    }
+
+    // 初始化
+    for(let i=0; i<8; i++) createPointerText();
+    updateSpanPositions();
+
+    // 性能优化参数
+    const RAF = { interval: 2, counter: 0 };
+    const spiral = { a: 0, b: 3, angle: 0 };
+    const radius = window.innerHeight * 0.2;
+    const radiusSq = radius * radius;
+
+    function updatePositions() {
+        RAF.counter++;
+        if(RAF.counter % RAF.interval !== 0) {
+            animationFrameId = requestAnimationFrame(updatePositions);
+            return;
+        }
+
+        spiral.angle += 0.03;
+        const scrollX = window.scrollX;
+        const scrollY = window.scrollY;
+
+        // 更新主文本
+        textSpans.forEach((span, index) => {
+            const pos = spanPositions[index];
+            const viewportX = pos.x - scrollX;
+            const viewportY = pos.y - scrollY;
+            const dx = viewportX - mouseX;
+            const dy = viewportY - mouseY;
+            const distanceSq = dx*dx + dy*dy;
+
+            if(distanceSq < radiusSq) {
+                const distance = Math.sqrt(distanceSq);
+                const phase = index * 0.3;
+                const r = spiral.a + spiral.b * (spiral.angle + phase);
+                const theta = spiral.angle + phase;
+                const attraction = 1 - (distance/radius);
+                const offsetX = r * Math.cos(theta) * attraction;
+                const offsetY = r * Math.sin(theta) * attraction;
+
+                span.style.transform = `translate3d(${offsetX}px, ${offsetY}px, 0)`;
+                span.style.opacity = 1 - (distance/radius)*0.5;
+                span.style.color = `hsl(${attraction*60 + 180}, 70%, 70%)`;
+            } else {
+                span.style.transform = 'translate3d(0,0,0)';
+                span.style.opacity = 0.9;
+                span.style.color = '#e0e0e0';
+            }
+        });
+
+        // 更新鼠标文字
+        pointerTexts.forEach(text => {
+            text.angle += text.speed;
+            text.distance = 15 + Math.sin(Date.now()/1000 + text.angle)*5;
+            const x = mouseX + Math.cos(text.angle) * text.distance;
+            const y = mouseY + Math.sin(text.angle) * text.distance;
+            text.element.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+            text.element.style.opacity = 0.8 + Math.sin(text.angle)*0.2;
+        });
+
+        animationFrameId = requestAnimationFrame(updatePositions);
+    }
+
+    // 事件监听
+    document.addEventListener('mousemove', (e) => {
+        mouseX = e.clientX;
+        mouseY = e.clientY;
+    });
+
+    let resizeTimer;
+    window.addEventListener('resize', () => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(() => {
+            cancelAnimationFrame(animationFrameId);
+            const radius = window.innerHeight * 0.2;
+            const radiusSq = radius * radius;
+            updateSpanPositions();
+            updatePositions();
+        }, 200);
+    });
+
+    // 滚动时更新位置缓存
+    window.addEventListener('scroll', () => {
+        updateSpanPositions();
+    }, { passive: true });
+
+    updatePositions();
+</script>
+</body>
+</html>

@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>中国景点参观人数热力图</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.2/dist/echarts.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a2a6c, #2c3e50);
+            color: #f5f5f5;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            color: #ffd700;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            color: #ddd;
+            max-width: 800px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
+        .app-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+        }
+
+        .chart-container {
+            flex: 1;
+            min-width: 300px;
+            background: rgba(25, 35, 65, 0.8);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(10px);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chart-title {
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+            color: #4fc3f7;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        #map-chart {
+            width: 100%;
+            height: 600px;
+            min-height: 300px;
+            border-radius: 10px;
+            background: rgba(10, 20, 40, 0.5);
+        }
+
+        .info-panel {
+            flex: 0 0 300px;
+            background: rgba(25, 35, 65, 0.8);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(10px);
+        }
+
+        .panel-title {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            color: #4fc3f7;
+            text-align: center;
+            padding-bottom: 10px;
+            border-bottom: 2px solid rgba(79, 195, 247, 0.3);
+        }
+
+        .data-highlight {
+            background: rgba(79, 195, 247, 0.2);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+
+        .highlight-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #ffd700;
+            margin: 10px 0;
+        }
+
+        .highlight-label {
+            font-size: 1.1rem;
+            color: #bbb;
+        }
+
+        .top-provinces {
+            margin-top: 25px;
+        }
+
+        .top-title {
+            font-size: 1.3rem;
+            margin-bottom: 15px;
+            color: #4fc3f7;
+        }
+
+        .province-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 15px;
+            margin-bottom: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .province-item:hover {
+            background: rgba(79, 195, 247, 0.25);
+            transform: translateX(5px);
+        }
+
+        .province-name {
+            font-weight: 500;
+        }
+
+        .province-value {
+            color: #ffd700;
+            font-weight: bold;
+        }
+
+        .legend {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+            padding: 0 10px;
+            color: #bbb;
+            font-size: 0.9rem;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding: 20px;
+            color: #aaa;
+            font-size: 0.9rem;
+        }
+
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            font-size: 1.2rem;
+            color: #4fc3f7;
+        }
+
+        @media (max-width: 768px) {
+            .app-container {
+                flex-direction: column;
+            }
+
+            .info-panel {
+                flex: 1;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+<div id="app">
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-map-marked-alt"></i> 中国景点参观人数热力图</h1>
+            <p class="subtitle">本可视化展示了中国各省份热门景点的参观人数分布情况，颜色越深的区域表示参观人数越多。鼠标悬停在省份上可查看详细数据。</p>
+        </header>
+
+        <div class="app-container">
+            <div class="chart-container">
+                <div class="chart-title">
+                    <i class="fas fa-chart-area"></i> 中国旅游热力分布图
+                </div>
+                <div id="map-chart">
+                    <div class="loading" v-if="loading">
+                        <i class="fas fa-spinner fa-spin"></i> 地图加载中...
+                    </div>
+                </div>
+                <div class="legend">
+                    <span>人数较少</span>
+                    <span>人数适中</span>
+                    <span>人数较多</span>
+                    <span>人数极多</span>
+                </div>
+            </div>
+
+            <div class="info-panel">
+                <div class="panel-title">
+                    <i class="fas fa-info-circle"></i> 数据概览
+                </div>
+
+                <div class="data-highlight">
+                    <div class="highlight-label">全国景点总参观人数</div>
+                    <div class="highlight-value">{{ formatNumber(totalVisitors) }}</div>
+                    <div class="highlight-label">人次</div>
+                </div>
+
+                <div class="panel-title">
+                    <i class="fas fa-trophy"></i> 热门旅游省份 TOP 5
+                </div>
+
+                <div class="top-provinces">
+                    <div class="top-title">参观人数最多的省份</div>
+                    <div class="province-item" v-for="(item, index) in topProvinces" :key="index">
+                        <span class="province-name">{{ index + 1 }}. {{ item.name }}</span>
+                        <span class="province-value">{{ formatNumber(item.value) }} 人次</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>数据更新时间: 2023年10月 | 数据为模拟数据，仅用于展示目的</p>
+            <p>© 2023 中国旅游热力图可视化 | 使用 Vue.js 和 ECharts 构建</p>
+        </div>
+    </div>
+</div>
+
+<script>
+    new Vue({
+        el: '#app',
+        data: {
+            loading: true,
+            mapChart: null,
+            totalVisitors: 0,
+            topProvinces: [],
+            provinceData: [
+                {name: '广东', value: 12560000},
+                {name: '江苏', value: 9850000},
+                {name: '山东', value: 9200000},
+                {name: '浙江', value: 8760000},
+                {name: '河南', value: 8210000},
+                {name: '四川', value: 7980000},
+                {name: '湖北', value: 7650000},
+                {name: '湖南', value: 7320000},
+                {name: '河北', value: 6980000},
+                {name: '安徽', value: 6650000},
+                {name: '福建', value: 6320000},
+                {name: '北京', value: 6100000},
+                {name: '陕西', value: 5870000},
+                {name: '江西', value: 5540000},
+                {name: '重庆', value: 5210000},
+                {name: '广西', value: 4980000},
+                {name: '云南', value: 4750000},
+                {name: '上海', value: 4520000},
+                {name: '辽宁', value: 4290000},
+                {name: '贵州', value: 4060000},
+                {name: '山西', value: 3830000},
+                {name: '天津', value: 3600000},
+                {name: '黑龙江', value: 3370000},
+                {name: '吉林', value: 3140000},
+                {name: '新疆', value: 2910000},
+                {name: '内蒙古', value: 2680000},
+                {name: '甘肃', value: 2450000},
+                {name: '海南', value: 2220000},
+                {name: '宁夏', value: 1990000},
+                {name: '青海', value: 1760000},
+                {name: '西藏', value: 1530000},
+                {name: '台湾', value: 1300000},
+                {name: '香港', value: 1070000},
+                {name: '澳门', value: 840000}
+            ]
+        },
+        mounted() {
+            this.initChart();
+            this.calculateTotals();
+        },
+        methods: {
+            initChart() {
+                const chartDom = document.getElementById('map-chart');
+                this.mapChart = echarts.init(chartDom);
+
+                // 计算总参观人数
+                this.totalVisitors = this.provinceData.reduce((sum, item) => sum + item.value, 0);
+
+                // 获取TOP 5省份
+                this.topProvinces = [...this.provinceData]
+                    .sort((a, b) => b.value - a.value)
+                    .slice(0, 5);
+
+                const option = {
+                    tooltip: {
+                        trigger: 'item',
+                        formatter: function(params) {
+                            return `${params.name}<br/>参观人数: ${params.value.toLocaleString()} 人次<br/>占比: ${(params.value / this.totalVisitors * 100).toFixed(2)}%`;
+                        }.bind(this)
+                    },
+                    visualMap: {
+                        min: 500000,
+                        max: 13000000,
+                        text: ['高', '低'],
+                        realtime: false,
+                        calculable: true,
+                        inRange: {
+                            color: ['#4575b4', '#74add1', '#abd9e9', '#e0f3f8', '#fee090', '#fdae61', '#f46d43', '#d73027']
+                        },
+                        textStyle: {
+                            color: '#ddd'
+                        }
+                    },
+                    series: [{
+                        name: '景点参观人数',
+                        type: 'map',
+                        map: 'china',
+                        roam: true,
+                        zoom: 1.2,
+                        label: {
+                            show: true,
+                            fontSize: 10,
+                            color: '#333'
+                        },
+                        emphasis: {
+                            label: {
+                                color: '#fff',
+                                fontSize: 12
+                            },
+                            itemStyle: {
+                                areaColor: '#ff7f50'
+                            }
+                        },
+                        data: this.provinceData
+                    }]
+                };
+
+                // 注册中国地图
+                if (!echarts.getMap('china')) {
+                    fetch('https://geo.datav.aliyun.com/areas_v3/bound/100000_full.json')
+                        .then(response => response.json())
+                        .then(chinaJson => {
+                            echarts.registerMap('china', chinaJson);
+                            this.mapChart.setOption(option);
+                            this.loading = false;
+                        })
+                        .catch(error => {
+                            console.error('加载地图数据失败:', error);
+                            this.loading = false;
+                        });
+                } else {
+                    this.mapChart.setOption(option);
+                    this.loading = false;
+                }
+
+                // 响应窗口大小变化
+                window.addEventListener('resize', () => {
+                    this.mapChart.resize();
+                });
+            },
+            calculateTotals() {
+                this.totalVisitors = this.provinceData.reduce((sum, item) => sum + item.value, 0);
+                this.topProvinces = [...this.provinceData]
+                    .sort((a, b) => b.value - a.value)
+                    .slice(0, 5);
+            },
+            formatNumber(num) {
+                return num.toLocaleString();
+            }
+        }
+    });
+</script>
+</body>
+</html>
